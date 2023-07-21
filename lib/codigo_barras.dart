@@ -77,8 +77,8 @@ class CodigoBarrasState extends State<CodigoBarras>
         controller.dispose();
         Future.delayed(Duration.zero, () {
           codigoBarras = barcode;
-          //Navigator.of(context).popAndPushNamed(PagamentoPage.routeName);
           print('BARRAS!!!!  $codigoBarras');
+          Navigator.of(context).pop(codigoBarras);
         });
         return;
       }
@@ -104,23 +104,25 @@ class CodigoBarrasState extends State<CodigoBarras>
   //Trata o retorno da transmisão de imagem
   // ignore: missing_return
   Future<String> detectarCodigoBarras(CameraImage image) async {
+    var x = 10;
     final InputImageMetadata metadata = InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: InputImageRotation.rotation270deg,
-        format: InputImageFormat.nv21,
+        format: InputImageFormat.bgra8888,
         bytesPerRow: image.planes.first.bytesPerRow);
 
     final imagem =
         InputImage.fromBytes(bytes: image.planes[0].bytes, metadata: metadata);
 
     final List<Barcode> barcodes = await _barcodeScanner.processImage(imagem);
+
     if (barcodes.isNotEmpty) {
       // Barcode(s) detected. Handle the results as needed.
       for (Barcode barcode in barcodes) {
-        print("Barcode value: ${barcode.value}");
+        print("Aqui 01 Barcode value: ${barcode.rawValue}");
         // Do something with the barcode value.
-        if (validateBoleto(barcode.value as String)) {
-          return barcode.value as String;
+        if (validateBoleto(barcode.rawValue as String)) {
+          return barcode.rawValue as String;
         }
       }
       _barcodeScanner.close();
@@ -218,7 +220,9 @@ class CodigoBarrasState extends State<CodigoBarras>
                   color: Cores.BRANCO,
                 ),
               ),
-              onTap: () {} //() => Navigator.of(context).pop()),
+              onTap: () {
+                Navigator.of(context).pop();
+              } //() => Navigator.of(context).pop()),
               ),
         ));
   }

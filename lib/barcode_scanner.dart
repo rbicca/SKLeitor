@@ -53,15 +53,16 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget> {
           metadata: InputImageMetadata(
               size: Size(image.width.toDouble(), image.height.toDouble()),
               rotation: InputImageRotation.rotation0deg,
-              format: InputImageFormat.nv21,
+              format: InputImageFormat.bgra8888,
               bytesPerRow: image.planes.first.bytesPerRow));
+
       final List<Barcode> barcodes =
           await _barcodeScanner.processImage(inputImage);
 
       if (barcodes.isNotEmpty) {
         // Barcode(s) detected. Handle the results as needed.
         for (Barcode barcode in barcodes) {
-          print("Barcode value: ${barcode.value}");
+          print("Aqui 02 Barcode value: ${barcode.rawValue}");
           // Do something with the barcode value.
         }
       }
