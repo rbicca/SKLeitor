@@ -53,7 +53,7 @@ class CodigoBarrasState extends State<CodigoBarras>
           ],
         );
       } else {
-        controller.lockCaptureOrientation(DeviceOrientation.landscapeLeft);
+        controller.lockCaptureOrientation(DeviceOrientation.landscapeRight);
         SystemChrome.setPreferredOrientations(
           <DeviceOrientation>[
             DeviceOrientation.landscapeLeft,
@@ -109,7 +109,7 @@ class CodigoBarrasState extends State<CodigoBarras>
     final InputImageMetadata metadata = InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: InputImageRotation.rotation270deg,
-        format: InputImageFormat.nv21,
+        format: InputImageFormat.bgra8888,
         bytesPerRow: totalBytes);
 
     final imagem = InputImage.fromBytes(bytes: bytes, metadata: metadata);
