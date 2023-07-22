@@ -1,5 +1,4 @@
 // ignore_for_file: avoid_print
-
 import 'dart:async';
 import 'dart:io';
 
@@ -28,9 +27,8 @@ class CodigoBarrasState extends State<CodigoBarras>
   late CameraController controller;
   final BarcodeScanner _barcodeScanner = GoogleMlKit.vision.barcodeScanner();
 
-  bool isBarrasFound = false;
-  late String barcode;
   bool _isProcessing = false;
+  bool _nowHALT = false;
 
   @override
   void initState() {
@@ -38,59 +36,53 @@ class CodigoBarrasState extends State<CodigoBarras>
 
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: <SystemUiOverlay>[]);
-    controller = CameraController(
-      cameras[0],
-      ResolutionPreset.high,
-    );
-
-    if (Platform.isAndroid) {
-      controller.lockCaptureOrientation(DeviceOrientation.landscapeLeft);
-      SystemChrome.setPreferredOrientations(
-        <DeviceOrientation>[
-          DeviceOrientation.landscapeRight,
-          DeviceOrientation.landscapeLeft,
-        ],
-      );
-    } else {
-      controller.lockCaptureOrientation(DeviceOrientation.landscapeLeft);
-      SystemChrome.setPreferredOrientations(
-        <DeviceOrientation>[
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight,
-        ],
-      );
-    }
+    controller =
+        CameraController(cameras[0], ResolutionPreset.high, enableAudio: false);
 
     controller.initialize().then((_) {
       if (!mounted) {
         return;
       }
-      iniciateStream();
+
+      if (Platform.isAndroid) {
+        controller.lockCaptureOrientation(DeviceOrientation.landscapeLeft);
+        SystemChrome.setPreferredOrientations(
+          <DeviceOrientation>[
+            DeviceOrientation.landscapeRight,
+            DeviceOrientation.landscapeLeft,
+          ],
+        );
+      } else {
+        controller.lockCaptureOrientation(DeviceOrientation.landscapeLeft);
+        SystemChrome.setPreferredOrientations(
+          <DeviceOrientation>[
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ],
+        );
+      }
+
       setState(() {});
+      iniciateStream();
     });
   }
 
-  //Inicia a transmissão de imagem
+  //Inicia a transmissão de imagens
   iniciateStream() async {
     controller.startImageStream((CameraImage image) async {
-      if (isBarrasFound) {
-        controller.dispose();
-        Future.delayed(Duration.zero, () {
-          codigoBarras = barcode;
-          print('BARRAS!!!!  $codigoBarras');
-          Navigator.of(context).pop(codigoBarras);
-        });
-        return;
-      }
       if (_isProcessing) return;
+      if (_nowHALT) return;
+
       _isProcessing = true;
+
       try {
         String codigo = await detectarCodigoBarras(image);
         if (codigo != '') {
-          setState(() {
-            isBarrasFound = true;
-            print('FOUND   $codigo');
-            barcode = codigo;
+          print('FOUND   $codigo');
+          _nowHALT = true;
+
+          Future.delayed(Duration.zero, () {
+            Navigator.of(context).pop(codigo);
           });
         }
       } catch (e) {
@@ -101,18 +93,28 @@ class CodigoBarrasState extends State<CodigoBarras>
     });
   }
 
-  //Trata o retorno da transmisão de imagem
   // ignore: missing_return
   Future<String> detectarCodigoBarras(CameraImage image) async {
-    var x = 10;
+    //-----------------------------------
+    if (_nowHALT) return '';
+
+    final WriteBuffer allBytes = WriteBuffer();
+    for (final Plane plane in image.planes) {
+      allBytes.putUint8List(plane.bytes);
+    }
+    final bytes = allBytes.done().buffer.asUint8List();
+    final int totalBytes =
+        image.planes.fold(0, (previousValue, e) => e.bytesPerRow);
+
     final InputImageMetadata metadata = InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: InputImageRotation.rotation270deg,
-        format: InputImageFormat.bgra8888,
-        bytesPerRow: image.planes.first.bytesPerRow);
+        format: InputImageFormat.nv21,
+        bytesPerRow: totalBytes);
 
-    final imagem =
-        InputImage.fromBytes(bytes: image.planes[0].bytes, metadata: metadata);
+    final imagem = InputImage.fromBytes(bytes: bytes, metadata: metadata);
+
+    //-----------------------------------
 
     final List<Barcode> barcodes = await _barcodeScanner.processImage(imagem);
 
@@ -120,12 +122,11 @@ class CodigoBarrasState extends State<CodigoBarras>
       // Barcode(s) detected. Handle the results as needed.
       for (Barcode barcode in barcodes) {
         print("Aqui 01 Barcode value: ${barcode.rawValue}");
-        // Do something with the barcode value.
         if (validateBoleto(barcode.rawValue as String)) {
+          _nowHALT = true;
           return barcode.rawValue as String;
         }
       }
-      _barcodeScanner.close();
     }
     return '';
   }
@@ -164,7 +165,6 @@ class CodigoBarrasState extends State<CodigoBarras>
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: AspectRatio(
                     aspectRatio: controller.value.aspectRatio,
-                    // ignore: unnecessary_null_comparison
                     child: controller.cameraId >= 0
                         ? CameraPreview(controller)
                         : Container(),
@@ -212,18 +212,19 @@ class CodigoBarrasState extends State<CodigoBarras>
         ),
         child: Center(
           child: InkWell(
-              child: const Text(
-                'Digitar código de barras',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Lato',
-                  color: Cores.BRANCO,
-                ),
+            child: const Text(
+              'Digitar código de barras',
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: 'Lato',
+                color: Cores.BRANCO,
               ),
-              onTap: () {
-                Navigator.of(context).pop();
-              } //() => Navigator.of(context).pop()),
-              ),
+            ),
+            onTap: () {
+              _nowHALT = true;
+              Navigator.of(context).pop();
+            },
+          ),
         ));
   }
 
@@ -239,7 +240,12 @@ class CodigoBarrasState extends State<CodigoBarras>
   @override
   void dispose() async {
     super.dispose();
-    controller.dispose();
+
+    try {
+      controller.stopImageStream();
+      _barcodeScanner.close();
+      controller.dispose();
+    } catch (_) {}
 
     SystemChrome.setPreferredOrientations(<DeviceOrientation>[]);
     SystemChrome.setPreferredOrientations(<DeviceOrientation>[

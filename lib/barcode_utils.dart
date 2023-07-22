@@ -1,49 +1,11 @@
 // ignore_for_file: avoid_print, curly_braces_in_flow_control_structures, prefer_typing_uninitialized_variables
-
-import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
-
 import 'dados_boleto.dart';
 
 Orientation getOrientation(size) {
   return size.width > size.height
       ? Orientation.landscape
       : Orientation.portrait;
-}
-
-Uint8List concatenatePlanes(List<Plane> planes) {
-  final WriteBuffer allBytes = WriteBuffer();
-  for (Plane plane in planes) {
-    allBytes.putUint8List(plane.bytes);
-  }
-  return allBytes.done().buffer.asUint8List();
-}
-
-InputImageMetadata buildMetaData(
-  CameraImage image,
-  InputImageRotation rotation,
-) {
-  return InputImageMetadata(
-      size: Size(image.width.toDouble(), image.height.toDouble()),
-      rotation: rotation,
-      format: InputImageFormat.nv21,
-      bytesPerRow: image.planes.first.bytesPerRow);
-}
-
-InputImageRotation rotationIntToImageRotation(int rotation) {
-  switch (rotation) {
-    case 0:
-      return InputImageRotation.rotation0deg;
-    case 90:
-      return InputImageRotation.rotation90deg;
-    case 180:
-      return InputImageRotation.rotation180deg;
-    default:
-      assert(rotation == 270);
-      return InputImageRotation.rotation270deg;
-  }
 }
 
 clearMask(String code) {
