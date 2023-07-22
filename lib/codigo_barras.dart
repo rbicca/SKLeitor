@@ -38,10 +38,8 @@ class CodigoBarrasState extends State<CodigoBarras>
 
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: <SystemUiOverlay>[]);
-    controller = CameraController(
-      cameras[0],
-      ResolutionPreset.high,
-    );
+    controller =
+        CameraController(cameras[0], ResolutionPreset.high, enableAudio: false);
 
     if (Platform.isAndroid) {
       controller.lockCaptureOrientation(DeviceOrientation.landscapeLeft);
@@ -104,7 +102,7 @@ class CodigoBarrasState extends State<CodigoBarras>
   //Trata o retorno da transmisão de imagem
   // ignore: missing_return
   Future<String> detectarCodigoBarras(CameraImage image) async {
-    var x = 10;
+    //var x = 10;
     final InputImageMetadata metadata = InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: InputImageRotation.rotation270deg,
@@ -122,6 +120,7 @@ class CodigoBarrasState extends State<CodigoBarras>
         print("Aqui 01 Barcode value: ${barcode.rawValue}");
         // Do something with the barcode value.
         if (validateBoleto(barcode.rawValue as String)) {
+          _barcodeScanner.close();
           return barcode.rawValue as String;
         }
       }
