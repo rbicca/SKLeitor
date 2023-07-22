@@ -109,7 +109,8 @@ class CodigoBarrasState extends State<CodigoBarras>
     final InputImageMetadata metadata = InputImageMetadata(
         size: Size(image.width.toDouble(), image.height.toDouble()),
         rotation: InputImageRotation.rotation270deg,
-        format: InputImageFormat.bgra8888,
+        format:
+            Platform.isIOS ? InputImageFormat.bgra8888 : InputImageFormat.nv21,
         bytesPerRow: totalBytes);
 
     final imagem = InputImage.fromBytes(bytes: bytes, metadata: metadata);
