@@ -31,9 +31,39 @@ Componente compatível com Dart 3.
   final result = await Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {return const SKLeitor();}));  
 
 ## Requitos e ajustes Android
-   todo
+  minSdkVersion: 21  
+   targetSdkVersion: 33  
+   compileSdkVersion: 33  
+
 ## Requisitos e ajustes iOs
-    todo
+    Adaptar seu Podfile conforme abaixo  
+
+    platform :ios, '12.0'   ou mais novo  
+  
+    ...  
+  
+    coloque esta linha:  
+    $iOSVersion = '12.0'  ou mais novo  
+  
+    post_install do |installer|  
+      coloque essas linhas  
+      installer.pods_project.build_configurations.each do |config|  
+        config.build_settings["EXCLUDED_ARCHS[sdk=*]"] = "armv7"  
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = $iOSVersion  
+      end  
+    
+      installer.pods_project.targets.each do |target|  
+        flutter_additional_ios_build_settings(target)  
+      
+        coloque essas linhas  
+        target.build_configurations.each do |config|  
+          if Gem::Version.new($iOSVersion) > Gem::Version.new(config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'])  
+            config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = $iOSVersion  
+          end  
+        end  
+      
+      end  
+    end    
     
   ### Autor: Ronaldo Melchiades Bicca
              ronaldo@softkuka.com.br
