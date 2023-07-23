@@ -9,21 +9,11 @@ import 'package:flutter/services.dart';
 import 'sk_leitor_globals.dart';
 import 'sk_leitor_funcoes_febraban.dart';
 
-// ignore: must_be_immutable
 class SKLeitor extends StatefulWidget {
-  double altura;
-  double largura;
-
-  SKLeitor({super.key, required this.altura, required this.largura});
+  const SKLeitor({super.key});
 
   @override
   State<StatefulWidget> createState() => SKLeitorState();
-
-  static Orientation getOrientation(size) {
-    return size.width > size.height
-        ? Orientation.landscape
-        : Orientation.portrait;
-  }
 }
 
 class SKLeitorState extends State<SKLeitor> with TickerProviderStateMixin {
@@ -102,7 +92,6 @@ class SKLeitorState extends State<SKLeitor> with TickerProviderStateMixin {
     });
   }
 
-  // ignore: missing_return
   Future<String> detectarCodigoBarras(CameraImage image) async {
     //-----------------------------------
     if (_nowHALT) return '';
@@ -147,6 +136,15 @@ class SKLeitorState extends State<SKLeitor> with TickerProviderStateMixin {
       return Container();
     }
 
+    MediaQueryData queryData = MediaQuery.of(context);
+
+    double altura = getOrientation(queryData.size) == Orientation.landscape
+        ? queryData.size.height
+        : queryData.size.width;
+    double largura = getOrientation(queryData.size) == Orientation.landscape
+        ? queryData.size.width
+        : queryData.size.height;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -187,7 +185,7 @@ class SKLeitorState extends State<SKLeitor> with TickerProviderStateMixin {
             constraints: const BoxConstraints.expand(),
             child: CustomPaint(
               painter: SKLeitorLinePainter(
-                windowSize: Size(widget.largura, widget.altura),
+                windowSize: Size(largura, altura),
               ),
             ),
           ),
@@ -245,6 +243,12 @@ class SKLeitorState extends State<SKLeitor> with TickerProviderStateMixin {
     final double maxLogicalHeight = data.size.width;
 
     return maxLogicalHeight / logicalHeight;
+  }
+
+  static Orientation getOrientation(size) {
+    return size.width > size.height
+        ? Orientation.landscape
+        : Orientation.portrait;
   }
 
   @override

@@ -16,13 +16,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Leitor MLKit',
+      title: 'SK Leitor',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'POC Leitor MLKit'),
+      home: const MyHomePage(title: 'SK Leitor MLKit'),
     );
   }
 }
@@ -51,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             const Text(
-              'POC Leitor MLKit',
+              'SK Leitor MLKit',
             ),
             Text(codigo),
             ElevatedButton(
@@ -65,20 +65,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _openBarcodeReader() async {
-    MediaQueryData queryData = MediaQuery.of(context);
-
-    double altura =
-        SKLeitor.getOrientation(queryData.size) == Orientation.landscape
-            ? queryData.size.height
-            : queryData.size.width;
-    double largura =
-        SKLeitor.getOrientation(queryData.size) == Orientation.landscape
-            ? queryData.size.width
-            : queryData.size.height;
-
     final result = await Navigator.of(context)
         .push(MaterialPageRoute(builder: (BuildContext context) {
-      return SKLeitor(altura: altura, largura: largura);
+      return const SKLeitor();
     }));
 
     if (result != null) {
