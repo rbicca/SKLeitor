@@ -1,8 +1,8 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'barcode_utils.dart';
-import 'codigo_barras.dart';
-import 'globals.dart';
+import 'package:camera/camera.dart';
+
+import 'sk_leitor.dart';
+import 'sk_leitor_globals.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +58,6 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: _openBarcodeReader,
               child: const Icon(Icons.camera_alt),
             )
-            //BarcodeScannerWidget(),
           ],
         ),
       ),
@@ -68,17 +67,20 @@ class _MyHomePageState extends State<MyHomePage> {
   _openBarcodeReader() async {
     MediaQueryData queryData = MediaQuery.of(context);
 
-    double altura = getOrientation(queryData.size) == Orientation.landscape
-        ? queryData.size.height
-        : queryData.size.width;
-    double largura = getOrientation(queryData.size) == Orientation.landscape
-        ? queryData.size.width
-        : queryData.size.height;
+    double altura =
+        SKLeitor.getOrientation(queryData.size) == Orientation.landscape
+            ? queryData.size.height
+            : queryData.size.width;
+    double largura =
+        SKLeitor.getOrientation(queryData.size) == Orientation.landscape
+            ? queryData.size.width
+            : queryData.size.height;
 
     final result = await Navigator.of(context)
         .push(MaterialPageRoute(builder: (BuildContext context) {
-      return CodigoBarras(altura: altura, largura: largura);
+      return SKLeitor(altura: altura, largura: largura);
     }));
+
     if (result != null) {
       setState(() {
         codigo = result;

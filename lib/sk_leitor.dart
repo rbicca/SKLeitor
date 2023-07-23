@@ -1,31 +1,39 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, use_full_hex_values_for_flutter_colors
 import 'dart:async';
 import 'dart:io';
 
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'barcode_utils.dart';
-import 'colors.dart';
-import 'globals.dart';
-import 'line_painter.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'sk_leitor_globals.dart';
+import 'sk_leitor_funcoes_febraban.dart';
 
 // ignore: must_be_immutable
-class CodigoBarras extends StatefulWidget {
+class SKLeitor extends StatefulWidget {
   double altura;
   double largura;
 
-  CodigoBarras({super.key, required this.altura, required this.largura});
+  SKLeitor({super.key, required this.altura, required this.largura});
 
   @override
-  State<StatefulWidget> createState() => CodigoBarrasState();
+  State<StatefulWidget> createState() => SKLeitorState();
+
+  static Orientation getOrientation(size) {
+    return size.width > size.height
+        ? Orientation.landscape
+        : Orientation.portrait;
+  }
 }
 
-class CodigoBarrasState extends State<CodigoBarras>
-    with TickerProviderStateMixin {
+class SKLeitorState extends State<SKLeitor> with TickerProviderStateMixin {
   late CameraController controller;
   final BarcodeScanner _barcodeScanner = GoogleMlKit.vision.barcodeScanner();
+
+  static const Color corLaranja = Color(0xFFe95f32);
+  static const Color corBranco = Color(0xFFf4f4f4);
+  static const Color corAzulAlpha = Color(0xFFa10030a8);
+  static const Color corAmareloMedio = Color(0xFFf18f34);
 
   bool _isProcessing = false;
   bool _nowHALT = false;
@@ -76,9 +84,10 @@ class CodigoBarrasState extends State<CodigoBarras>
       _isProcessing = true;
 
       try {
-        String codigo = await detectarCodigoBarras(image);
+        String codigo = '';
+        codigo = await detectarCodigoBarras(image);
         if (codigo != '') {
-          print('FOUND   $codigo');
+          print('Boleto Febraban detectado - valor: $codigo');
           _nowHALT = true;
 
           Future.delayed(Duration.zero, () {
@@ -120,10 +129,10 @@ class CodigoBarrasState extends State<CodigoBarras>
     final List<Barcode> barcodes = await _barcodeScanner.processImage(imagem);
 
     if (barcodes.isNotEmpty) {
-      // Barcode(s) detected. Handle the results as needed.
       for (Barcode barcode in barcodes) {
-        print("Aqui 01 Barcode value: ${barcode.rawValue}");
-        if (validateBoleto(barcode.rawValue as String)) {
+        print("Barras detectado - valor: ${barcode.rawValue}");
+        if (SKLeitorFuncoesFebraban.validateBoleto(
+            barcode.rawValue as String)) {
           _nowHALT = true;
           return barcode.rawValue as String;
         }
@@ -145,7 +154,7 @@ class CodigoBarrasState extends State<CodigoBarras>
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios,
-            color: Cores.BRANCO,
+            color: corBranco,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -155,7 +164,7 @@ class CodigoBarrasState extends State<CodigoBarras>
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 150),
-            color: Cores.AZUL_ALPHA,
+            color: corAzulAlpha,
             child: RotatedBox(
               quarterTurns: 0,
               child: Transform.scale(
@@ -177,7 +186,7 @@ class CodigoBarrasState extends State<CodigoBarras>
           Container(
             constraints: const BoxConstraints.expand(),
             child: CustomPaint(
-              painter: LinePainter(
+              painter: SKLeitorLinePainter(
                 windowSize: Size(widget.largura, widget.altura),
               ),
             ),
@@ -199,15 +208,15 @@ class CodigoBarrasState extends State<CodigoBarras>
         width: 250,
         height: 50,
         decoration: BoxDecoration(
-          color: Cores.AMARELO_MEDIO,
+          color: corAmareloMedio,
           borderRadius: BorderRadius.circular(34),
           gradient: const LinearGradient(
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             stops: [0.01, 0.3],
             colors: [
-              Cores.LARANJA,
-              Cores.AMARELO_MEDIO,
+              corLaranja,
+              corAmareloMedio,
             ],
           ),
         ),
@@ -218,7 +227,7 @@ class CodigoBarrasState extends State<CodigoBarras>
               style: TextStyle(
                 fontSize: 16,
                 fontFamily: 'Lato',
-                color: Cores.BRANCO,
+                color: corBranco,
               ),
             ),
             onTap: () {
@@ -259,4 +268,30 @@ class CodigoBarrasState extends State<CodigoBarras>
           SystemUiOverlay.bottom,
         ]);
   }
+}
+
+class SKLeitorLinePainter extends CustomPainter {
+  SKLeitorLinePainter({required this.windowSize, this.closeWindow = false});
+
+  final Size windowSize;
+  final bool closeWindow;
+
+  static const Color corLARANJA = Color(0xFFe95f32);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    var paint = Paint();
+    paint.color = corLARANJA;
+    paint.strokeWidth = 2;
+    double positionH = windowSize.height / 2.5;
+    canvas.drawLine(
+      Offset(10, positionH),
+      Offset(windowSize.width * .98, positionH),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(SKLeitorLinePainter oldDelegate) =>
+      oldDelegate.closeWindow != closeWindow;
 }
