@@ -30,6 +30,11 @@ Componente compatível com Dart 3.
   - Chame a tela de leitura e aguarde o resultado    
   final result = await Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {return const SKLeitor();}));  
 
+## Requitos e ajustes Android
+   todo
+## Requisitos e ajustes iOs
+    todo
+    
   ### Autor: Ronaldo Melchiades Bicca
              ronaldo@softkuka.com.br
   ### Softkuka Softwares LTDA
