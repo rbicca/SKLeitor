@@ -1,16 +1,36 @@
-# fb_leitor
+# SKLeitor
 
-A new Flutter project.
+Efetua a deteção de código de barras de boleto padrão Febraban
+usando a tecnologia MLKit do Google.
+Componente compatível com Dart 3.
 
-## Getting Started
+## Para usar no seu projeto Flutter
 
-This project is a starting point for a Flutter application.
+- No seu pubspec.yaml, adicione as seguintes dependências
+  google_ml_kit: ^0.16.1
+  google_mlkit_barcode_scanning: ^0.8.0
+  camera: ^0.10.5+2
 
-A few resources to get you started if this is your first Flutter project:
+- Adicione os arquivos, dentro da estrutura do seu projeto
+    sk_leitor_funcoes_febraban.dart
+    sk_leitor_globals.dart
+    sk_leitor.dart
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Main.dart
+  import 'package:camera/camera.dart';
+  import 'sk_leitor.dart';
+  import 'sk_leitor_globals.dart';
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+  Future<void> main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    cameras = await availableCameras();
+    runApp(const MyApp());
+  }
+
+  - Chame a tela de leitura e aguarde o resultado  
+  final result = await Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {return const SKLeitor();}));
+
+  ### Autor: Ronaldo Melchiades Bicca
+             ronaldo@softkuka.com.br
+  ### Softkuka Softwares LTDA
+
